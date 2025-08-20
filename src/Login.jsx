@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./Login.css";
+import logo from "../images/magu_2.png";
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -21,7 +22,7 @@ export default function Login({ onLogin }) {
   const renderLoginForm = () => (
     <form className="login-card" onSubmit={handleLogin}>
       <div className="logo-circle">
-        <img src="../images/magu.jpg" alt="Logo" />
+        <img src={logo} alt="Logo" />
       </div>
       <h1 className="agromagu">AgroMAGU®</h1>
       <p>Inicia sesión para cuidar tu cultivo de frijol</p>
