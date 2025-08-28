@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "lucide-react": "^0.539.0",
+    "mssql": "^11.0.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "recharts": "^3.1.2"
@@ -39,6 +40,3 @@
   "author": "",
   "license": "ISC"
 }
-
-
-
