@@ -1,27 +1,52 @@
 import { useState } from "react";
 import "./Login.css";
+import logo from "../images/magu_2.png";
+import Registrarme from "./Registrarme";
+import OlvidasteContraseña from "./OlvidasteContraseña";
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [currentScreen, setCurrentScreen] = useState("login"); // login, forgot, register
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const users = { admin: "admin123", user_1: "user123" };
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (users[username] && users[username] === password) {
-      onLogin(username);
-    } else {
-      alert("Usuario o contraseña incorrectos");
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:8000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.detail || "Usuario o contraseña incorrectos");
+      } else {
+        // Login exitoso, ejecutar callback
+        onLogin(username, data); // data puede incluir token u otra info
+      }
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      alert("Error al conectar con el servidor");
+    } finally {
+      setLoading(false);
     }
   };
 
   const renderLoginForm = () => (
     <form className="login-card" onSubmit={handleLogin}>
       <div className="logo-circle">
-        <img src="../images/magu.jpg" alt="Logo" />
+        <img src={logo} alt="Logo" />
       </div>
       <h1 className="agromagu">AgroMAGU®</h1>
       <p>Inicia sesión para cuidar tu cultivo de frijol</p>
@@ -66,8 +91,8 @@ export default function Login({ onLogin }) {
         </button>
       </div>
 
-      <button type="submit" className="btn-neon">
-        Ingresar
+      <button type="submit" className="btn-neon" disabled={loading}>
+        {loading ? "Cargando..." : "Ingresar"}
       </button>
 
       <div className="extra-space"></div>
@@ -85,37 +110,15 @@ export default function Login({ onLogin }) {
     </form>
   );
 
-  const renderForgot = () => (
-    <div className="login-card">
-      <h1>Recuperar contraseña</h1>
-      <p>Ingresa tu correo para recuperar tu contraseña</p>
-      <input type="email" placeholder="Correo electrónico" />
-      <button className="btn-neon">Enviar</button>
-      <button className="link-btn" onClick={() => setCurrentScreen("login")}>
-        ← Volver
-      </button>
-    </div>
-  );
-
-  const renderRegister = () => (
-    <div className="login-card">
-      <h1>Registrarme</h1>
-      <p>Crea una cuenta nueva</p>
-      <input type="text" placeholder="Usuario" />
-      <input type="email" placeholder="Correo electrónico" />
-      <input type="password" placeholder="Contraseña" />
-      <button className="btn-neon">Registrarse</button>
-      <button className="link-btn" onClick={() => setCurrentScreen("login")}>
-        ← Volver
-      </button>
-    </div>
-  );
-
   return (
     <div className="login-page">
       {currentScreen === "login" && renderLoginForm()}
-      {currentScreen === "forgot" && renderForgot()}
-      {currentScreen === "register" && renderRegister()}
+      {currentScreen === "forgot" && (
+        <OlvidasteContraseña onBack={() => setCurrentScreen("login")} />
+      )}
+      {currentScreen === "register" && (
+        <Registrarme onBack={() => setCurrentScreen("login")} />
+      )}
     </div>
   );
 }

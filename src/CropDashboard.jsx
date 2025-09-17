@@ -11,68 +11,255 @@ import robotImage from "../images/magu_2.png";
 export default function CropDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Simular carga de datos
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-
-    // Actualizar hora actual cada minuto
-    const timeInterval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-
-    return () => {
-      clearTimeout(timer);
-      clearInterval(timeInterval);
-    };
-  }, []);
-
-  const npkData = {
-    N: [{ name: "Nitrógeno", value: 45, fill: "#4A6B2A" }],
-    P: [{ name: "Fósforo", value: 31, fill: "#6B9EBF" }],
-    K: [{ name: "Potasio", value: 68, fill: "#E8C662" }],
-  };
-
-  const soilData = [
+  const [npkData, setNpkData] = useState({
+    N: [{ name: "Nitrógeno", value: 0, fill: "#4A6B2A" }],
+    P: [{ name: "Fósforo", value: 0, fill: "#6B9EBF" }],
+    K: [{ name: "Potasio", value: 0, fill: "#E8C662" }],
+  });
+  const [soilData, setSoilData] = useState([
     {
       parameter: "Humedad",
-      value: 72,
+      value: 0,
       unit: "%",
       icon: "💧",
       color: "#4A6B2A",
     },
     {
       parameter: "Temperatura",
-      value: 25,
+      value: 0,
       unit: "°C",
       icon: "🌡️",
       color: "#A67C52",
     },
-    { parameter: "pH", value: 6.8, unit: "", icon: "🧪", color: "#6B9EBF" },
+    { parameter: "pH", value: 0, unit: "", icon: "🧪", color: "#6B9EBF" },
     {
       parameter: "Luz Solar",
-      value: 87,
+      value: 0,
       unit: "%",
       icon: "☀️",
       color: "#E8C662",
     },
-  ];
+  ]);
+  const [sensorData, setSensorData] = useState({
+    humedad: 0,
+    temperatura: 0,
+    nitrogeno: 0,
+    fosforo: 0,
+    potasio: 0,
+    status: "Normal",
+  });
+  const [nextActivity, setNextActivity] = useState({
+    date: "Cargando...",
+    task: "Cargando actividad...",
+    priority: "Media",
+    time: "--:--",
+  });
+  const [recommendations, setRecommendations] = useState([
+    "Cargando recomendaciones...",
+  ]);
+  const [error, setError] = useState(null);
 
-  const nextActivity = {
-    date: "20 Ago 2025",
-    task: "🌱 Siembra de frijol",
-    priority: "Alta",
-    time: "09:00 AM",
+  // Formatear fecha para la API (YYYY-MM-DD)
+  const formatDateForAPI = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
-  const recommendations = [
-    "💧 Regar el cultivo en 2 días",
-    "🌱 Añadir fertilizante rico en fósforo",
-    "☀️ Revisar exposición solar",
-    "🫘 Momento óptimo para sembrar más frijol",
-  ];
+  // Función para obtener datos de las APIs
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const fecha = formatDateForAPI(currentTime);
+
+      // Obtener datos de NPK y soilData
+      const promedioResponse = await fetch(
+        `http://localhost:8000/api/lecturas/promedio/1?fecha=${fecha}`
+      );
+      if (!promedioResponse.ok) {
+        throw new Error(
+          `Error en API de promedios: ${promedioResponse.status}`
+        );
+      }
+      const promedioData = await promedioResponse.json();
+
+      // Obtener actividad del día
+      const actividadResponse = await fetch(
+        "http://localhost:8000/api/actividades/hoy/1"
+      );
+      if (!actividadResponse.ok) {
+        throw new Error(
+          `Error en API de actividades: ${actividadResponse.status}`
+        );
+      }
+      const actividadData = await actividadResponse.json();
+
+      // Obtener última lectura del sensor
+      const ultimaResponse = await fetch(
+        "http://localhost:8000/api/lecturas/ultima/1"
+      );
+      if (!ultimaResponse.ok) {
+        throw new Error(
+          `Error en API de última lectura: ${ultimaResponse.status}`
+        );
+      }
+      const ultimaData = await ultimaResponse.json();
+
+      // Actualizar estados con los datos recibidos
+      // Ajustar según la estructura real de tu API
+      setNpkData({
+        N: [
+          {
+            name: "Nitrógeno",
+            value: promedioData.nitrogeno || 0,
+            fill: "#9dc575ff",
+          },
+        ],
+        P: [
+          {
+            name: "Fósforo",
+            value: promedioData.fosforo || 0,
+            fill: "#6B9EBF",
+          },
+        ],
+        K: [
+          {
+            name: "Potasio",
+            value: promedioData.potasio || 0,
+            fill: "#E8C662",
+          },
+        ],
+      });
+
+      setSoilData([
+        {
+          parameter: "Humedad",
+          value: promedioData.humedad || 0,
+          unit: "%",
+          icon: "💧",
+          color: "#4A6B2A",
+        },
+        {
+          parameter: "Temperatura",
+          value: promedioData.temperatura || 0,
+          unit: "°C",
+          icon: "🌡️",
+          color: "#A67C52",
+        },
+        {
+          parameter: "pH",
+          value: promedioData.ph || 0,
+          unit: "",
+          icon: "🧪",
+          color: "#6B9EBF",
+        },
+        {
+          parameter: "Luz Solar",
+          value: promedioData.luz_solar || 0,
+          unit: "%",
+          icon: "☀️",
+          color: "#E8C662",
+        },
+      ]);
+
+      setSensorData({
+        humedad: ultimaData.humedad || 0,
+        temperatura: ultimaData.temperatura || 0,
+        nitrogeno: ultimaData.nitrogeno || 0,
+        fosforo: ultimaData.fosforo || 0,
+        potasio: ultimaData.potasio || 0,
+        status: ultimaData.status || "Normal",
+      });
+
+      // Procesar datos de actividad
+      if (actividadData && actividadData.titulo) {
+        setNextActivity({
+          date: actividadData.fecha || "20 Ago 2025",
+          task: actividadData.titulo || "🌱 Siembra de frijol",
+          priority: actividadData.prioridad || "Media", // tu API no manda prioridad, pon valor por defecto
+          // tu API tampoco manda hora
+        });
+      } else {
+        setNextActivity({
+          date: "Hoy",
+          task: actividadData?.message || "No hay actividades programadas",
+          priority: "Baja",
+          time: "--:--",
+        });
+      }
+
+      // Generar recomendaciones basadas en los datos
+      const newRecommendations = [];
+      if (ultimaData.humedad < 50) {
+        newRecommendations.push("💧 Regar el cultivo pronto");
+      }
+      if (ultimaData.fosforo < 20) {
+        newRecommendations.push("🌱 Añadir fertilizante rico en fósforo");
+      }
+      if (ultimaData.luz_solar > 80) {
+        newRecommendations.push("☀️ Revisar exposición solar");
+      }
+      if (newRecommendations.length === 0) {
+        newRecommendations.push("✅ Condiciones normales, mantener monitoreo");
+      }
+
+      setRecommendations(newRecommendations);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Cargar datos iniciales
+    fetchData();
+
+    // Actualizar hora actual cada minuto
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    // Actualizar datos cada 5 minutos
+    const dataInterval = setInterval(() => {
+      fetchData();
+    }, 300000);
+
+    return () => {
+      clearInterval(timeInterval);
+      clearInterval(dataInterval);
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#E8F5E9] to-[#A5D6A7] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#4A6B2A] mx-auto"></div>
+          <p className="mt-4 text-xl text-[#4A6B2A]">Cargando datos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#E8F5E9] to-[#A5D6A7] flex items-center justify-center">
+        <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-lg text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-700 mb-4">{error}</p>
+          <button
+            onClick={fetchData}
+            className="bg-[#4A6B2A] text-white px-4 py-2 rounded-lg hover:bg-[#3A5522] transition"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#E8F5E9] to-[#A5D6A7] p-6">
@@ -149,7 +336,8 @@ export default function CropDashboard() {
                       </RadialBarChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-[#4A6B2A]">
+                      {/* Cambiado a blanco hueso para mejor contraste */}
+                      <span className="text-2xl font-bold text-[#4A6B2A] drop-shadow-md">
                         {npkData[nutrient][0].value}%
                       </span>
                     </div>
@@ -218,31 +406,42 @@ export default function CropDashboard() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Humedad del suelo:</span>
-                  <span className="font-semibold">55%</span>
+                  <span className="font-semibold">{sensorData.humedad}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Temperatura:</span>
-                  <span className="font-semibold">23°C</span>
+                  <span className="font-semibold">
+                    {sensorData.temperatura}°C
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Nitrógeno:</span>
-                  <span className="font-semibold">21 ppm</span>
+                  <span className="font-semibold">
+                    {sensorData.nitrogeno} ppm
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Fósforo:</span>
-                  <span className="font-semibold">18 ppm</span>
+                  <span className="font-semibold">
+                    {sensorData.fosforo} ppm
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Potasio:</span>
-                  <span className="font-semibold">30 ppm</span>
+                  <span className="font-semibold">
+                    {sensorData.potasio} ppm
+                  </span>
                 </div>
               </div>
               <div className="flex gap-2 mt-4">
-                <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm">
-                  Normal
-                </span>
-                <span className="px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm">
-                  Alerta
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    sensorData.status === "Normal"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {sensorData.status}
                 </span>
               </div>
             </div>
@@ -307,7 +506,15 @@ export default function CropDashboard() {
                 </p>
               </div>
               <div className="mt-4 md:mt-0">
-                <span className="px-4 py-2 bg-[#4A6B2A] text-white rounded-full text-sm font-semibold">
+                <span
+                  className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                    nextActivity.priority === "Alta"
+                      ? "bg-red-500 text-white"
+                      : nextActivity.priority === "Media"
+                      ? "bg-yellow-500 text-white"
+                      : "bg-green-500 text-white"
+                  }`}
+                >
                   Prioridad: {nextActivity.priority}
                 </span>
               </div>
