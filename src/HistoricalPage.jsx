@@ -3,85 +3,183 @@ import { useState, useEffect } from "react";
 export default function HistoricalPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("3meses");
   const [isLoading, setIsLoading] = useState(true);
+  const [historicalData, setHistoricalData] = useState(null);
+  const [error, setError] = useState(null);
 
-  // Simular carga de datos
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  // Función para obtener datos de la API
+  const fetchHistoricalData = async (periodo) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch(
+        `http://localhost:8000/api/lecturas/historico/1/${periodo}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error en API: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Transformar los datos recibidos al formato esperado
+      const transformedData = transformApiData(data);
+      setHistoricalData(transformedData);
+    } catch (err) {
+      console.error("Error obteniendo datos históricos:", err);
+      setError(`Error al cargar los datos históricos: ${err.message}`);
+    } finally {
       setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Datos históricos según el período seleccionado
-  const historicalData = {
-    "1mes": {
-      labels: ["Sem 1", "Sem 2", "Sem 3", "Sem 4"],
-      nitrogen: [40, 42, 45, 48],
-      phosphorus: [28, 29, 30, 31],
-      potassium: [60, 62, 65, 68],
-      ph: [6.4, 6.5, 6.5, 6.6],
-      humidity: [68, 70, 72, 74],
-      temperature: [24, 25, 26, 25],
-    },
-    "3meses": {
-      labels: ["Feb", "Mar", "Abr", "May"],
-      nitrogen: [30, 40, 45, 50],
-      phosphorus: [25, 28, 30, 32],
-      potassium: [55, 60, 65, 70],
-      ph: [6.2, 6.4, 6.5, 6.7],
-      humidity: [65, 70, 72, 75],
-      temperature: [22, 24, 25, 26],
-    },
-    "6meses": {
-      labels: ["Nov", "Dic", "Ene", "Feb", "Mar", "Abr"],
-      nitrogen: [25, 30, 35, 40, 45, 50],
-      phosphorus: [20, 22, 25, 28, 30, 32],
-      potassium: [50, 52, 55, 60, 65, 70],
-      ph: [6.0, 6.1, 6.2, 6.4, 6.5, 6.7],
-      humidity: [60, 62, 65, 70, 72, 75],
-      temperature: [20, 21, 22, 24, 25, 26],
-    },
+    }
   };
 
-  const currentData = historicalData[selectedPeriod];
+  // Función para transformar los datos de la API al formato esperado
+  const transformApiData = (apiData) => {
+    if (!apiData || apiData.length === 0) return null;
 
-  // Estadísticas resumidas
-  const stats = {
-    nitrogen: {
-      current: currentData.nitrogen[currentData.nitrogen.length - 1],
-      previous: currentData.nitrogen[currentData.nitrogen.length - 2],
-      trend:
-        currentData.nitrogen[currentData.nitrogen.length - 1] >
-        currentData.nitrogen[currentData.nitrogen.length - 2]
-          ? "up"
-          : "down",
-    },
-    phosphorus: {
-      current: currentData.phosphorus[currentData.phosphorus.length - 1],
-      previous: currentData.phosphorus[currentData.phosphorus.length - 2],
-      trend:
-        currentData.phosphorus[currentData.phosphorus.length - 1] >
-        currentData.phosphorus[currentData.phosphorus.length - 2]
-          ? "up"
-          : "down",
-    },
-    potassium: {
-      current: currentData.potassium[currentData.potassium.length - 1],
-      previous: currentData.potassium[currentData.potassium.length - 2],
-      trend:
-        currentData.potassium[currentData.potassium.length - 1] >
-        currentData.potassium[currentData.potassium.length - 2]
-          ? "up"
-          : "down",
-    },
+    // Extraer fechas y datos para cada parámetro
+    const fechas = apiData.map((item) => item.fecha);
+
+    const resumen = {
+      nitrogeno: {
+        nombre: "Nitrógeno",
+        unidad: "mg/kg",
+        icono: "🌱",
+        color: "#4A6B2A",
+        valor_actual: apiData[apiData.length - 1].nitrogeno,
+        valor_anterior:
+          apiData.length > 1
+            ? apiData[apiData.length - 2].nitrogeno
+            : apiData[0].nitrogeno,
+        datos_grafica: apiData.map((item) => item.nitrogeno),
+        descripcion: "Niveles de nitrógeno en el suelo",
+      },
+      fosforo: {
+        nombre: "Fósforo",
+        unidad: "mg/kg",
+        icono: "⚡",
+        color: "#6B9EBF",
+        valor_actual: apiData[apiData.length - 1].fosforo,
+        valor_anterior:
+          apiData.length > 1
+            ? apiData[apiData.length - 2].fosforo
+            : apiData[0].fosforo,
+        datos_grafica: apiData.map((item) => item.fosforo),
+        descripcion: "Niveles de fósforo en el suelo",
+      },
+      potasio: {
+        nombre: "Potasio",
+        unidad: "mg/kg",
+        icono: "⚖️",
+        color: "#E8C662",
+        valor_actual: apiData[apiData.length - 1].potasio,
+        valor_anterior:
+          apiData.length > 1
+            ? apiData[apiData.length - 2].potasio
+            : apiData[0].potasio,
+        datos_grafica: apiData.map((item) => item.potasio),
+        descripcion: "Niveles de potasio en el suelo",
+      },
+      ph: {
+        nombre: "pH",
+        unidad: "",
+        icono: "🧪",
+        color: "#8B7BD8",
+        valor_actual: apiData[apiData.length - 1].ph,
+        valor_anterior:
+          apiData.length > 1 ? apiData[apiData.length - 2].ph : apiData[0].ph,
+        datos_grafica: apiData.map((item) => item.ph),
+        descripcion: "Nivel de pH del suelo",
+      },
+      humedad: {
+        nombre: "Humedad",
+        unidad: "%",
+        icono: "💧",
+        color: "#5DADE2",
+        valor_actual: apiData[apiData.length - 1].humedad,
+        valor_anterior:
+          apiData.length > 1
+            ? apiData[apiData.length - 2].humedad
+            : apiData[0].humedad,
+        datos_grafica: apiData.map((item) => item.humedad),
+        descripcion: "Humedad del suelo",
+      },
+      temperatura: {
+        nombre: "Temperatura",
+        unidad: "°C",
+        icono: "🌡️",
+        color: "#F1948A",
+        valor_actual: apiData[apiData.length - 1].temperatura,
+        valor_anterior:
+          apiData.length > 1
+            ? apiData[apiData.length - 2].temperatura
+            : apiData[0].temperatura,
+        datos_grafica: apiData.map((item) => item.temperatura),
+        descripcion: "Temperatura del suelo",
+      },
+    };
+
+    return {
+      resumen,
+      fechas,
+      analisis: generateAnalysis(apiData),
+    };
+  };
+
+  // Función para generar análisis básico
+  const generateAnalysis = (data) => {
+    if (!data || data.length === 0) {
+      return {
+        tendencias_positivas: [
+          "Datos insuficientes para determinar tendencias",
+        ],
+        recomendaciones: ["Continuar monitoreando los niveles"],
+      };
+    }
+
+    // Lógica simple de análisis - puedes mejorarla según tus necesidades
+    const lastItem = data[data.length - 1];
+    const firstItem = data[0];
+
+    const tendencias = [];
+    const recomendaciones = [];
+
+    // Análisis de nitrógeno
+    if (lastItem.nitrogeno > firstItem.nitrogeno) {
+      tendencias.push("Nitrógeno en aumento");
+    } else if (lastItem.nitrogeno < firstItem.nitrogeno) {
+      tendencias.push("Nitrógeno en disminución");
+      recomendaciones.push("Considerar fertilización nitrogenada");
+    }
+
+    // Análisis de pH
+    if (lastItem.ph < 6.0) {
+      recomendaciones.push("El pH está bajo, considerar encalado");
+    } else if (lastItem.ph > 7.5) {
+      recomendaciones.push("El pH está alto, considerar acidificación");
+    }
+
+    // Asegurar que haya al menos una tendencia y recomendación
+    if (tendencias.length === 0) {
+      tendencias.push("Tendencias estables en la mayoría de parámetros");
+    }
+
+    if (recomendaciones.length === 0) {
+      recomendaciones.push("Mantener el programa de fertilización actual");
+    }
+
+    return {
+      tendencias_positivas: tendencias,
+      recomendaciones: recomendaciones,
+    };
   };
 
   // Función para generar URLs de gráficas con codificación correcta
-  const generateChartUrl = (parameter, data, color) => {
+  const generateChartUrl = (parameter, data, labels, color) => {
     const chartConfig = {
       type: "line",
       data: {
-        labels: currentData.labels,
+        labels: labels,
         datasets: [
           {
             label: parameter,
@@ -124,18 +222,149 @@ export default function HistoricalPage() {
     return `https://quickchart.io/chart?c=${encodedConfig}&width=500&height=200`;
   };
 
+  // Función para formatear fechas para las etiquetas de las gráficas
+  const formatLabels = (fechas) => {
+    return fechas.map((fecha) => {
+      const date = new Date(fecha);
+      return date.toLocaleDateString("es-ES", {
+        month: "short",
+        day: "2-digit",
+      });
+    });
+  };
+
+  // Función para determinar la tendencia
+  const getTrendDirection = (current, previous) => {
+    if (current > previous) return "up";
+    if (current < previous) return "down";
+    return "stable";
+  };
+
+  // Cargar datos cuando cambie el período
+  useEffect(() => {
+    fetchHistoricalData(selectedPeriod);
+  }, [selectedPeriod]);
+
+  // Renderizar loading state
   if (isLoading) {
     return (
-      <div className="bg-white p-6 rounded-2xl shadow-lg min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#4A6B2A] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <h2 className="text-xl font-bold text-[#4A6B2A]">
-            Cargando datos históricos...
+      <div className="bg-white p-6 rounded-2xl shadow-lg min-h-screen">
+        {/* Header con selector de período siempre visible */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <h2 className="text-2xl font-bold text-[#4A6B2A]">
+            📈 Análisis Histórico
           </h2>
+          <p className="text-sm text-gray-500 mt-1 md:mt-0">
+            Análisis de datos históricos y tendencias
+          </p>
+
+          <div className="mt-4 md:mt-0">
+            <label htmlFor="period" className="mr-2 text-gray-700">
+              Período:
+            </label>
+            <select
+              id="period"
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A6B2A]"
+              disabled={isLoading}
+            >
+              <option value="1mes">Último mes</option>
+              <option value="3meses">Últimos 3 meses</option>
+              <option value="6meses">Últimos 6 meses</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Loading spinner */}
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-[#4A6B2A] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 className="text-xl font-bold text-[#4A6B2A]">
+              Cargando datos históricos...
+            </h2>
+          </div>
         </div>
       </div>
     );
   }
+
+  // Renderizar error state
+  if (error) {
+    return (
+      <div className="bg-white p-6 rounded-2xl shadow-lg">
+        {/* Header con selector de período */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <h2 className="text-2xl font-bold text-[#4A6B2A]">
+            📈 Análisis Histórico
+          </h2>
+          <p className="text-sm text-gray-500 mt-1 md:mt-0">
+            Análisis de datos históricos y tendencias
+          </p>
+
+          <div className="mt-4 md:mt-0">
+            <label htmlFor="period" className="mr-2 text-gray-700">
+              Período:
+            </label>
+            <select
+              id="period"
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A6B2A]"
+            >
+              <option value="1mes">Último mes</option>
+              <option value="3meses">Últimos 3 meses</option>
+              <option value="6meses">Últimos 6 meses</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Error message */}
+        <div className="text-center">
+          <div className="text-6xl text-red-500 mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-red-600 mb-2">{error}</h2>
+          <button
+            onClick={() => fetchHistoricalData(selectedPeriod)}
+            className="px-4 py-2 bg-[#4A6B2A] text-white rounded-lg hover:bg-[#6B9EBF] transition"
+          >
+            Reintentar
+          </button>
+
+          {/* Debug info */}
+          <div className="mt-4 p-4 bg-gray-100 rounded-lg text-left">
+            <h3 className="font-semibold mb-2">Información de debug:</h3>
+            <p className="text-sm text-gray-600">
+              Período seleccionado: {selectedPeriod}
+            </p>
+            <p className="text-sm text-gray-600">
+              URL: http://localhost:8000/api/lecturas/historico/1/
+              {selectedPeriod}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Validación más específica de datos
+  if (!historicalData || !historicalData.resumen) {
+    return (
+      <div className="bg-white p-6 rounded-2xl shadow-lg">
+        <div className="text-center">
+          <div className="text-6xl text-gray-400 mb-4">📊</div>
+          <h2 className="text-xl font-bold text-gray-600">
+            No hay datos históricos disponibles
+          </h2>
+          <p className="text-sm text-gray-500 mt-2">
+            No se encontraron registros para el período seleccionado
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const { resumen, fechas, analisis } = historicalData;
+  const formattedLabels = fechas ? formatLabels(fechas) : [];
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg">
@@ -143,6 +372,9 @@ export default function HistoricalPage() {
         <h2 className="text-2xl font-bold text-[#4A6B2A]">
           📈 Análisis Histórico
         </h2>
+        <p className="text-sm text-gray-500 mt-1 md:mt-0">
+          Análisis de datos históricos y tendencias
+        </p>
 
         <div className="mt-4 md:mt-0">
           <label htmlFor="period" className="mr-2 text-gray-700">
@@ -163,254 +395,418 @@ export default function HistoricalPage() {
 
       {/* Tarjetas de resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
-          <div className="flex items-center">
-            <span className="text-2xl mr-2">🌱</span>
-            <h3 className="font-semibold text-green-800">Nitrógeno</h3>
+        {resumen.nitrogeno && (
+          <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+            <div className="flex items-center">
+              <span className="text-2xl mr-2">
+                {resumen.nitrogeno.icono || "🌱"}
+              </span>
+              <h3 className="font-semibold text-green-800">Nitrógeno</h3>
+            </div>
+            <div className="mt-2">
+              <p className="text-2xl font-bold text-green-900">
+                {resumen.nitrogeno.valor_actual} {resumen.nitrogeno.unidad}
+              </p>
+              <p
+                className={`text-sm ${
+                  getTrendDirection(
+                    resumen.nitrogeno.valor_actual,
+                    resumen.nitrogeno.valor_anterior
+                  ) === "up"
+                    ? "text-green-600"
+                    : getTrendDirection(
+                        resumen.nitrogeno.valor_actual,
+                        resumen.nitrogeno.valor_anterior
+                      ) === "down"
+                    ? "text-red-600"
+                    : "text-gray-600"
+                }`}
+              >
+                {getTrendDirection(
+                  resumen.nitrogeno.valor_actual,
+                  resumen.nitrogeno.valor_anterior
+                ) === "up"
+                  ? "↗"
+                  : getTrendDirection(
+                      resumen.nitrogeno.valor_actual,
+                      resumen.nitrogeno.valor_anterior
+                    ) === "down"
+                  ? "↘"
+                  : "→"}{" "}
+                Desde {resumen.nitrogeno.valor_anterior}{" "}
+                {resumen.nitrogeno.unidad}
+              </p>
+            </div>
           </div>
-          <div className="mt-2">
-            <p className="text-2xl font-bold text-green-900">
-              {stats.nitrogen.current} ppm
-            </p>
-            <p
-              className={`text-sm ${
-                stats.nitrogen.trend === "up"
-                  ? "text-green-600"
-                  : "text-red-600"
-              }`}
-            >
-              {stats.nitrogen.trend === "up" ? "↗" : "↘"} Desde{" "}
-              {stats.nitrogen.previous} ppm
-            </p>
-          </div>
-        </div>
+        )}
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
-          <div className="flex items-center">
-            <span className="text-2xl mr-2">🧪</span>
-            <h3 className="font-semibold text-blue-800">Fósforo</h3>
+        {resumen.fosforo && (
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+            <div className="flex items-center">
+              <span className="text-2xl mr-2">
+                {resumen.fosforo.icono || "⚡"}
+              </span>
+              <h3 className="font-semibold text-blue-800">Fósforo</h3>
+            </div>
+            <div className="mt-2">
+              <p className="text-2xl font-bold text-blue-900">
+                {resumen.fosforo.valor_actual} {resumen.fosforo.unidad}
+              </p>
+              <p
+                className={`text-sm ${
+                  getTrendDirection(
+                    resumen.fosforo.valor_actual,
+                    resumen.fosforo.valor_anterior
+                  ) === "up"
+                    ? "text-green-600"
+                    : getTrendDirection(
+                        resumen.fosforo.valor_actual,
+                        resumen.fosforo.valor_anterior
+                      ) === "down"
+                    ? "text-red-600"
+                    : "text-gray-600"
+                }`}
+              >
+                {getTrendDirection(
+                  resumen.fosforo.valor_actual,
+                  resumen.fosforo.valor_anterior
+                ) === "up"
+                  ? "↗"
+                  : getTrendDirection(
+                      resumen.fosforo.valor_actual,
+                      resumen.fosforo.valor_anterior
+                    ) === "down"
+                  ? "↘"
+                  : "→"}{" "}
+                Desde {resumen.fosforo.valor_anterior} {resumen.fosforo.unidad}
+              </p>
+            </div>
           </div>
-          <div className="mt-2">
-            <p className="text-2xl font-bold text-blue-900">
-              {stats.phosphorus.current} ppm
-            </p>
-            <p
-              className={`text-sm ${
-                stats.phosphorus.trend === "up"
-                  ? "text-green-600"
-                  : "text-red-600"
-              }`}
-            >
-              {stats.phosphorus.trend === "up" ? "↗" : "↘"} Desde{" "}
-              {stats.phosphorus.previous} ppm
-            </p>
-          </div>
-        </div>
+        )}
 
-        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-xl border border-yellow-200">
-          <div className="flex items-center">
-            <span className="text-2xl mr-2">🪴</span>
-            <h3 className="font-semibold text-yellow-800">Potasio</h3>
+        {resumen.potasio && (
+          <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-xl border border-yellow-200">
+            <div className="flex items-center">
+              <span className="text-2xl mr-2">
+                {resumen.potasio.icono || "⚖️"}
+              </span>
+              <h3 className="font-semibold text-yellow-800">Potasio</h3>
+            </div>
+            <div className="mt-2">
+              <p className="text-2xl font-bold text-yellow-900">
+                {resumen.potasio.valor_actual} {resumen.potasio.unidad}
+              </p>
+              <p
+                className={`text-sm ${
+                  getTrendDirection(
+                    resumen.potasio.valor_actual,
+                    resumen.potasio.valor_anterior
+                  ) === "up"
+                    ? "text-green-600"
+                    : getTrendDirection(
+                        resumen.potasio.valor_actual,
+                        resumen.potasio.valor_anterior
+                      ) === "down"
+                    ? "text-red-600"
+                    : "text-gray-600"
+                }`}
+              >
+                {getTrendDirection(
+                  resumen.potasio.valor_actual,
+                  resumen.potasio.valor_anterior
+                ) === "up"
+                  ? "↗"
+                  : getTrendDirection(
+                      resumen.potasio.valor_actual,
+                      resumen.potasio.valor_anterior
+                    ) === "down"
+                  ? "↘"
+                  : "→"}{" "}
+                Desde {resumen.potasio.valor_anterior} {resumen.potasio.unidad}
+              </p>
+            </div>
           </div>
-          <div className="mt-2">
-            <p className="text-2xl font-bold text-yellow-900">
-              {stats.potassium.current} ppm
-            </p>
-            <p
-              className={`text-sm ${
-                stats.potassium.trend === "up"
-                  ? "text-green-600"
-                  : "text-red-600"
-              }`}
-            >
-              {stats.potassium.trend === "up" ? "↗" : "↘"} Desde{" "}
-              {stats.potassium.previous} ppm
-            </p>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Nitrógeno */}
-        <div className="bg-gradient-to-br from-green-50 to-white p-4 rounded-2xl shadow-md border border-green-100">
-          <div className="flex items-center mb-4">
-            <span className="text-2xl mr-2">🌱</span>
-            <h3 className="text-lg font-semibold text-green-800">
-              Nitrógeno (N)
-            </h3>
-          </div>
-          <img
-            src={generateChartUrl("Nitrógeno", currentData.nitrogen, "#4A6B2A")}
-            alt="Gráfica Nitrógeno"
-            className="rounded-lg w-full h-48 object-contain"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src =
-                "https://via.placeholder.com/500x200/4A6B2A/FFFFFF?text=Error+cargando+gráfica";
-            }}
-          />
-          <div className="mt-3 text-sm text-gray-600">
-            <p>
-              El nitrógeno es esencial para el crecimiento vegetativo y el
-              desarrollo de hojas.
-            </p>
-          </div>
-        </div>
-
-        {/* Fósforo */}
-        <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-2xl shadow-md border border-blue-100">
-          <div className="flex items-center mb-4">
-            <span className="text-2xl mr-2">🧪</span>
-            <h3 className="text-lg font-semibold text-blue-800">Fósforo (P)</h3>
-          </div>
-          <img
-            src={generateChartUrl("Fósforo", currentData.phosphorus, "#3B82F6")}
-            alt="Gráfica Fósforo"
-            className="rounded-lg w-full h-48 object-contain"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src =
-                "https://via.placeholder.com/500x200/3B82F6/FFFFFF?text=Error+cargando+gráfica";
-            }}
-          />
-          <div className="mt-3 text-sm text-gray-600">
-            <p>
-              El fósforo favorece el desarrollo radicular y la formación de
-              flores y frutos.
-            </p>
-          </div>
-        </div>
-
-        {/* Potasio */}
-        <div className="bg-gradient-to-br from-yellow-50 to-white p-4 rounded-2xl shadow-md border border-yellow-100">
-          <div className="flex items-center mb-4">
-            <span className="text-2xl mr-2">🪴</span>
-            <h3 className="text-lg font-semibold text-yellow-800">
-              Potasio (K)
-            </h3>
-          </div>
-          <img
-            src={generateChartUrl("Potasio", currentData.potassium, "#EAB308")}
-            alt="Gráfica Potasio"
-            className="rounded-lg w-full h-48 object-contain"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src =
-                "https://via.placeholder.com/500x200/EAB308/FFFFFF?text=Error+cargando+gráfica";
-            }}
-          />
-          <div className="mt-3 text-sm text-gray-600">
-            <p>
-              El potasio mejora la resistencia a enfermedades y la calidad de
-              los frutos.
-            </p>
-          </div>
-        </div>
-
-        {/* pH */}
-        <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-2xl shadow-md border border-purple-100">
-          <div className="flex items-center mb-4">
-            <span className="text-2xl mr-2">⚗️</span>
-            <h3 className="text-lg font-semibold text-purple-800">
-              pH del suelo
-            </h3>
-          </div>
-          <img
-            src={generateChartUrl("pH", currentData.ph, "#8B5CF6")}
-            alt="Gráfica pH"
-            className="rounded-lg w-full h-48 object-contain"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src =
-                "https://via.placeholder.com/500x200/8B5CF6/FFFFFF?text=Error+cargando+gráfica";
-            }}
-          />
-          <div className="mt-3 text-sm text-gray-600">
-            <p>
-              El pH afecta la disponibilidad de nutrientes para las plantas.
-            </p>
-          </div>
-        </div>
-
-        {/* Humedad */}
-        <div className="bg-gradient-to-br from-cyan-50 to-white p-4 rounded-2xl shadow-md border border-cyan-100">
-          <div className="flex items-center mb-4">
-            <span className="text-2xl mr-2">💧</span>
-            <h3 className="text-lg font-semibold text-cyan-800">Humedad (%)</h3>
-          </div>
-          <img
-            src={generateChartUrl("Humedad", currentData.humidity, "#06B6D4")}
-            alt="Gráfica Humedad"
-            className="rounded-lg w-full h-48 object-contain"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src =
-                "https://via.placeholder.com/500x200/06B6D4/FFFFFF?text=Error+cargando+gráfica";
-            }}
-          />
-          <div className="mt-3 text-sm text-gray-600">
-            <p>
-              La humedad del suelo es crucial para la absorción de nutrientes.
-            </p>
-          </div>
-        </div>
-
-        {/* Temperatura */}
-        <div className="bg-gradient-to-br from-red-50 to-white p-4 rounded-2xl shadow-md border border-red-100">
-          <div className="flex items-center mb-4">
-            <span className="text-2xl mr-2">🌡️</span>
-            <h3 className="text-lg font-semibold text-red-800">
-              Temperatura (°C)
-            </h3>
-          </div>
-          <img
-            src={generateChartUrl(
-              "Temperatura",
-              currentData.temperature,
-              "#EF4444"
+        {/* Renderizar gráficas solo si existen los datos */}
+        {resumen.nitrogeno && (
+          <div className="bg-gradient-to-br from-green-50 to-white p-4 rounded-2xl shadow-md border border-green-100">
+            <div className="flex items-center mb-4">
+              <span className="text-2xl mr-2">
+                {resumen.nitrogeno.icono || "🌱"}
+              </span>
+              <h3 className="text-lg font-semibold text-green-800">
+                {resumen.nitrogeno.nombre || "Nitrógeno"}
+              </h3>
+            </div>
+            {resumen.nitrogeno.datos_grafica && formattedLabels.length > 0 ? (
+              <img
+                src={generateChartUrl(
+                  resumen.nitrogeno.nombre || "Nitrógeno",
+                  resumen.nitrogeno.datos_grafica,
+                  formattedLabels,
+                  resumen.nitrogeno.color || "#4A6B2A"
+                )}
+                alt="Gráfica Nitrógeno"
+                className="rounded-lg w-full h-48 object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src =
+                    "https://via.placeholder.com/500x200/4A6B2A/FFFFFF?text=Error+cargando+gráfica";
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
+                <p className="text-gray-500">Sin datos para mostrar</p>
+              </div>
             )}
-            alt="Gráfica Temperatura"
-            className="rounded-lg w-full h-48 object-contain"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src =
-                "https://via.placeholder.com/500x200/EF4444/FFFFFF?text=Error+cargando+gráfica";
-            }}
-          />
-          <div className="mt-3 text-sm text-gray-600">
-            <p>
-              La temperatura afecta los procesos metabólicos de las plantas.
-            </p>
+            <div className="mt-3 text-sm text-gray-600">
+              <p>
+                {resumen.nitrogeno.descripcion ||
+                  "Monitoreo de niveles de nitrógeno"}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {resumen.fosforo && (
+          <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-2xl shadow-md border border-blue-100">
+            <div className="flex items-center mb-4">
+              <span className="text-2xl mr-2">
+                {resumen.fosforo.icono || "⚡"}
+              </span>
+              <h3 className="text-lg font-semibold text-blue-800">
+                {resumen.fosforo.nombre || "Fósforo"}
+              </h3>
+            </div>
+            {resumen.fosforo.datos_grafica && formattedLabels.length > 0 ? (
+              <img
+                src={generateChartUrl(
+                  resumen.fosforo.nombre || "Fósforo",
+                  resumen.fosforo.datos_grafica,
+                  formattedLabels,
+                  resumen.fosforo.color || "#6B9EBF"
+                )}
+                alt="Gráfica Fósforo"
+                className="rounded-lg w-full h-48 object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src =
+                    "https://via.placeholder.com/500x200/6B9EBF/FFFFFF?text=Error+cargando+gráfica";
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
+                <p className="text-gray-500">Sin datos para mostrar</p>
+              </div>
+            )}
+            <div className="mt-3 text-sm text-gray-600">
+              <p>
+                {resumen.fosforo.descripcion ||
+                  "Monitoreo de niveles de fósforo"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {resumen.potasio && (
+          <div className="bg-gradient-to-br from-yellow-50 to-white p-4 rounded-2xl shadow-md border border-yellow-100">
+            <div className="flex items-center mb-4">
+              <span className="text-2xl mr-2">
+                {resumen.potasio.icono || "⚖️"}
+              </span>
+              <h3 className="text-lg font-semibold text-yellow-800">
+                {resumen.potasio.nombre || "Potasio"}
+              </h3>
+            </div>
+            {resumen.potasio.datos_grafica && formattedLabels.length > 0 ? (
+              <img
+                src={generateChartUrl(
+                  resumen.potasio.nombre || "Potasio",
+                  resumen.potasio.datos_grafica,
+                  formattedLabels,
+                  resumen.potasio.color || "#E8C662"
+                )}
+                alt="Gráfica Potasio"
+                className="rounded-lg w-full h-48 object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src =
+                    "https://via.placeholder.com/500x200/E8C662/FFFFFF?text=Error+cargando+gráfica";
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
+                <p className="text-gray-500">Sin datos para mostrar</p>
+              </div>
+            )}
+            <div className="mt-3 text-sm text-gray-600">
+              <p>
+                {resumen.potasio.descripcion ||
+                  "Monitoreo de niveles de potasio"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {resumen.ph && (
+          <div className="bg-gradient-to-br from-purple-50 to-white p-4 rounded-2xl shadow-md border border-purple-100">
+            <div className="flex items-center mb-4">
+              <span className="text-2xl mr-2">{resumen.ph.icono || "🧪"}</span>
+              <h3 className="text-lg font-semibold text-purple-800">
+                {resumen.ph.nombre || "pH"}
+              </h3>
+            </div>
+            {resumen.ph.datos_grafica && formattedLabels.length > 0 ? (
+              <img
+                src={generateChartUrl(
+                  resumen.ph.nombre || "pH",
+                  resumen.ph.datos_grafica,
+                  formattedLabels,
+                  resumen.ph.color || "#8B7BD8"
+                )}
+                alt="Gráfica pH"
+                className="rounded-lg w-full h-48 object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src =
+                    "https://via.placeholder.com/500x200/8B7BD8/FFFFFF?text=Error+cargando+gráfica";
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
+                <p className="text-gray-500">Sin datos para mostrar</p>
+              </div>
+            )}
+            <div className="mt-3 text-sm text-gray-600">
+              <p>{resumen.ph.descripcion || "Monitoreo del pH del suelo"}</p>
+            </div>
+          </div>
+        )}
+
+        {resumen.humedad && (
+          <div className="bg-gradient-to-br from-cyan-50 to-white p-4 rounded-2xl shadow-md border border-cyan-100">
+            <div className="flex items-center mb-4">
+              <span className="text-2xl mr-2">
+                {resumen.humedad.icono || "💧"}
+              </span>
+              <h3 className="text-lg font-semibold text-cyan-800">
+                {resumen.humedad.nombre || "Humedad"}
+              </h3>
+            </div>
+            {resumen.humedad.datos_grafica && formattedLabels.length > 0 ? (
+              <img
+                src={generateChartUrl(
+                  resumen.humedad.nombre || "Humedad",
+                  resumen.humedad.datos_grafica,
+                  formattedLabels,
+                  resumen.humedad.color || "#5DADE2"
+                )}
+                alt="Gráfica Humedad"
+                className="rounded-lg w-full h-48 object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src =
+                    "https://via.placeholder.com/500x200/5DADE2/FFFFFF?text=Error+cargando+gráfica";
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
+                <p className="text-gray-500">Sin datos para mostrar</p>
+              </div>
+            )}
+            <div className="mt-3 text-sm text-gray-600">
+              <p>
+                {resumen.humedad.descripcion ||
+                  "Monitoreo de la humedad del suelo"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {resumen.temperatura && (
+          <div className="bg-gradient-to-br from-red-50 to-white p-4 rounded-2xl shadow-md border border-red-100">
+            <div className="flex items-center mb-4">
+              <span className="text-2xl mr-2">
+                {resumen.temperatura.icono || "🌡️"}
+              </span>
+              <h3 className="text-lg font-semibold text-red-800">
+                {resumen.temperatura.nombre || "Temperatura"}
+              </h3>
+            </div>
+            {resumen.temperatura.datos_grafica && formattedLabels.length > 0 ? (
+              <img
+                src={generateChartUrl(
+                  resumen.temperatura.nombre || "Temperatura",
+                  resumen.temperatura.datos_grafica,
+                  formattedLabels,
+                  resumen.temperatura.color || "#F1948A"
+                )}
+                alt="Gráfica Temperatura"
+                className="rounded-lg w-full h-48 object-contain"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src =
+                    "https://via.placeholder.com/500x200/F1948A/FFFFFF?text=Error+cargando+gráfica";
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-48 bg-gray-100 rounded-lg">
+                <p className="text-gray-500">Sin datos para mostrar</p>
+              </div>
+            )}
+            <div className="mt-3 text-sm text-gray-600">
+              <p>
+                {resumen.temperatura.descripcion ||
+                  "Monitoreo de la temperatura del suelo"}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Resumen general */}
-      <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl border border-green-200">
-        <h3 className="text-xl font-semibold text-[#4A6B2A] mb-4">
-          📊 Resumen de Tendencia
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h4 className="font-medium text-gray-700 mb-2">
-              Tendencias positivas:
-            </h4>
-            <ul className="list-disc list-inside text-green-700">
-              <li>El nitrógeno ha aumentado consistentemente</li>
-              <li>Los niveles de potasio se mantienen óptimos</li>
-              <li>La humedad del suelo muestra mejora</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-700 mb-2">Recomendaciones:</h4>
-            <ul className="list-disc list-inside text-blue-700">
-              <li>Mantener el programa de fertilización actual</li>
-              <li>Monitorear el pH regularmente</li>
-              <li>Ajustar riego según la temporada</li>
-            </ul>
+      {analisis && (
+        <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl border border-green-200">
+          <h3 className="text-xl font-semibold text-[#4A6B2A] mb-4">
+            📊 Resumen de Tendencia
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium text-gray-700 mb-2">
+                Tendencias positivas:
+              </h4>
+              <ul className="list-disc list-inside text-green-700">
+                {analisis.tendencias_positivas &&
+                analisis.tendencias_positivas.length > 0 ? (
+                  analisis.tendencias_positivas.map((tendencia, index) => (
+                    <li key={index}>{tendencia}</li>
+                  ))
+                ) : (
+                  <li>Datos insuficientes para determinar tendencias</li>
+                )}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-700 mb-2">
+                Recomendaciones:
+              </h4>
+              <ul className="list-disc list-inside text-blue-700">
+                {analisis.recomendaciones &&
+                analisis.recomendaciones.length > 0 ? (
+                  analisis.recomendaciones.map((recomendacion, index) => (
+                    <li key={index}>{recomendacion}</li>
+                  ))
+                ) : (
+                  <li>Continuar monitoreando los niveles</li>
+                )}
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
