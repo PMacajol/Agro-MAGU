@@ -75,7 +75,7 @@ export default function CropDashboard() {
 
       // Obtener datos de NPK y soilData
       const promedioResponse = await fetch(
-        `http://localhost:8000/api/lecturas/promedio/1?fecha=${fecha}`
+        `https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/lecturas/promedio/1?fecha=${fecha}`
       );
       if (!promedioResponse.ok) {
         throw new Error(
@@ -86,7 +86,7 @@ export default function CropDashboard() {
 
       // Obtener actividad del día
       const actividadResponse = await fetch(
-        "http://localhost:8000/api/actividades/hoy/1"
+        "https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/actividades/hoy/1"
       );
       if (!actividadResponse.ok) {
         throw new Error(
@@ -97,7 +97,7 @@ export default function CropDashboard() {
 
       // Obtener última lectura del sensor
       const ultimaResponse = await fetch(
-        "http://localhost:8000/api/lecturas/ultima/1"
+        "https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/lecturas/ultima/1"
       );
       if (!ultimaResponse.ok) {
         throw new Error(

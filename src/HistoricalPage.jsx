@@ -13,7 +13,7 @@ export default function HistoricalPage() {
       setError(null);
 
       const response = await fetch(
-        `http://localhost:8000/api/lecturas/historico/1/${periodo}`
+        `https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/lecturas/historico/1/${periodo}`
       );
 
       if (!response.ok) {
@@ -337,7 +337,8 @@ export default function HistoricalPage() {
               Período seleccionado: {selectedPeriod}
             </p>
             <p className="text-sm text-gray-600">
-              URL: http://localhost:8000/api/lecturas/historico/1/
+              URL:
+              https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/lecturas/historico/1/
               {selectedPeriod}
             </p>
           </div>

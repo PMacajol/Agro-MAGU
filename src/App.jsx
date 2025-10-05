@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CropDashboard from "./CropDashboard";
 import BeanAIConsultant from "./BeanAIConsultant";
 import SamplingPage from "./SamplingPage";
 import HistoricalPage from "./HistoricalPage";
+import { autoMonitor } from "./services/telegramIA";
 import Login from "./Login";
 import {
   BarChart3,
@@ -20,6 +21,24 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [view, setView] = useState("dashboard");
   const [user, setUser] = useState(null);
+  // Efecto para el monitoreo automático (se ejecuta al iniciar sesión)
+  useEffect(() => {
+    if (user) {
+      console.log("🚀 Usuario autenticado, iniciando monitoreo...");
+
+      // Ejecutar monitoreo inmediatamente
+      autoMonitor.executeMonitoringCycle();
+
+      // Iniciar monitoreo cada 5 minutos
+      autoMonitor.startAutomaticMonitoring(5);
+
+      // Cleanup al cerrar sesión
+      return () => {
+        console.log("🛑 Cerrando sesión, deteniendo monitoreo...");
+        autoMonitor.stopAutomaticMonitoring();
+      };
+    }
+  }, [user]); // Solo depende de user
 
   if (!user) {
     return <Login onLogin={setUser} />;
@@ -99,7 +118,10 @@ function App() {
               </div>
 
               <button
-                onClick={() => setUser(null)}
+                onClick={() => {
+                  // Si cierras sesión, setUser(null) ejecutará el cleanup del useEffect
+                  setUser(null);
+                }}
                 className="p-2 rounded-lg hover:bg-white/10 transition-colors"
                 title="Cerrar sesión"
               >

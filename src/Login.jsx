@@ -16,16 +16,19 @@ export default function Login({ onLogin }) {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: username,
-          password: password,
-        }),
-      });
+      const response = await fetch(
+        "https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: username,
+            password: password,
+          }),
+        }
+      );
 
       const data = await response.json();
 

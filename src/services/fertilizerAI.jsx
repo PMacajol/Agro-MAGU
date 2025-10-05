@@ -11,102 +11,90 @@ export const getFertilizerRecommendationFromAPI = async (parameters) => {
 
     const url = "https://openrouter.ai/api/v1/chat/completions";
 
-    const prompt = `Eres un experto agronómico guatemalteco. Analiza ESTOS valores específicos:
+    const prompt = `Eres un ingeniero agrónomo guatemalteco con 25 años de experiencia especializada en cultivo de frijol. Proporciona recomendaciones TÉCNICAS y PRÁCTICAS para pequeños y medianos agricultores. Las dosis deben calcularse estrictamente por MANZANA (1 manzana = 0.70 hectáreas = 7,000 m²).
 
-PARÁMETROS ACTUALES:
-- Nitrógeno: ${parameters.nitrogen} ppm ${
-      parameters.nitrogen < 60
-        ? "⬇️ DEFICIENTE"
-        : parameters.nitrogen > 120
-        ? "⬆️ EXCESIVO"
-        : "✅ ÓPTIMO"
-    }
-- Fósforo: ${parameters.phosphorus} ppm ${
-      parameters.phosphorus < 30
-        ? "⬇️ DEFICIENTE"
-        : parameters.phosphorus > 60
-        ? "⬆️ EXCESIVO"
-        : "✅ ÓPTIMO"
-    } 
-- Potasio: ${parameters.potassium} ppm ${
-      parameters.potassium < 100
-        ? "⬇️ DEFICIENTE"
-        : parameters.potassium > 200
-        ? "⬆️ EXCESIVO"
-        : "✅ ÓPTIMO"
-    }
-- pH: ${parameters.ph} ${
-      parameters.ph < 5.5
-        ? "⬇️ ÁCIDO"
-        : parameters.ph > 7.0
-        ? "⬆️ ALCALINO"
-        : "✅ NEUTRO"
-    }
+ANÁLISIS DE SUELO proporcionado:
+- Nitrógeno (N): ${parameters.nitrogen} ppm
+- Fósforo (P): ${parameters.phosphorus} ppm
+- Potasio (K): ${parameters.potassium} ppm
+- pH del suelo: ${parameters.ph}
 - Humedad: ${parameters.humidity}%
 - Temperatura: ${parameters.temperature}°C
 - Luz solar: ${parameters.sunlight}%
 
-DIAGNÓSTICO:
-${
-  parameters.nitrogen < 60
-    ? "❌ DEFICIT de NITRÓGENO - Necesita fertilizante nitrogenado"
-    : parameters.nitrogen > 120
-    ? "⚠️ EXCESO de NITRÓGENO - Reducir aplicación de N"
-    : "✅ Nitrógeno en niveles óptimos"
-}
-${
-  parameters.phosphorus < 30
-    ? "❌ DEFICIT CRÍTICO de FÓSFORO - Urge aplicación de P"
-    : parameters.phosphorus > 60
-    ? "⚠️ EXCESO de FÓSFORO - Evitar más aplicación de P"
-    : "✅ Fósforo en niveles óptimos"
-}
-${
-  parameters.potassium < 100
-    ? "❌ DEFICIT de POTASIO - Aplicar fertilizante potásico"
-    : parameters.potassium > 200
-    ? "⚠️ EXCESO de POTASIO - Reducir aplicación de K"
-    : "✅ Potasio en niveles óptimos"
-}
-${
-  parameters.ph < 5.5
-    ? "❌ pH ÁCIDO - Considerar encalado"
-    : parameters.ph > 7.0
-    ? "⚠️ pH ALCALINO - Considerar acidificación"
-    : "✅ pH en rango óptimo"
+INTERPRETACIÓN AGRONÓMICA:
+- Nitrógeno (N): ${
+      parameters.nitrogen < 60
+        ? "DEFICIENTE"
+        : parameters.nitrogen > 120
+        ? "EXCESIVO"
+        : "ÓPTIMO"
+    } para frijol. Rango óptimo: 60-120 ppm.
+- Fósforo (P): ${
+      parameters.phosphorus < 30
+        ? "DEFICIENTE"
+        : parameters.phosphorus > 60
+        ? "EXCESIVO"
+        : "ÓPTIMO"
+    } para frijol. Rango óptimo: 30-60 ppm.
+- Potasio (K): ${
+      parameters.potassium < 100
+        ? "DEFICIENTE"
+        : parameters.potassium > 200
+        ? "EXCESIVO"
+        : "ÓPTIMO"
+    } para frijol. Rango óptimo: 100-200 ppm.
+- pH: ${
+      parameters.ph < 5.5
+        ? "ÁCIDO"
+        : parameters.ph > 7.0
+        ? "ALCALINO"
+        : "NEUTRO"
+    }. Rango ideal para frijol: 6.0-6.5.
+
+CONSIDERACIONES ESPECÍFICAS PARA GUATEMALA:
+- Los suelos volcánicos tienen alta capacidad de fijación de fósforo
+- En el Corredor Seco, priorizar la retención de humedad mediante cobertura y materia orgánica
+- El sistema K'uxu'rum (madre cacao + maíz + frijol) mejora la humedad del suelo y aporta nitrógeno
+
+RECOMENDACIÓN REQUERIDA:
+Genera una recomendación PRECISA considerando los parámetros exactos proporcionados. La recomendación debe ser ESPECÍFICA para el cultivo de frijol en Guatemala.
+
+DEVUELVE ÚNICAMENTE un objeto JSON con esta estructura:
+{
+  "diagnostico": "Breve diagnóstico técnico basado en los parámetros",
+  "nombre_recomendacion": "Nombre específico de la recomendación",
+  "dosis_manzana": "Cantidad exacta por manzana (ej: 100-120 lb/manzana de fórmula 10-30-10)",
+  "producto_sugerido": "Fórmula NPK específica y tipo",
+  "precio_aproximado": "Precio en Quetzales (GTQ) por manzana",
+  "esquema_aplicacion": "Etapas y momentos de aplicación detallados",
+  "eficacia_esperada": "% de efectividad para corregir las deficiencias",
+  "beneficios_tecnicos": ["5 beneficios agronómicos específicos"],
+  "precauciones": ["5 riesgos o consideraciones técnicas"],
+  "recomendaciones_complementarias": ["Manejo de suelo, riego, otras prácticas"]
 }
 
-RECOMENDACIÓN ESPECÍFICA para CULTIVO DE FRIJOL en SUELOS VOLCÁNICOS de GUATEMALA:
-
-Genera una recomendación PERSONALIZADA basada en estos valores exactos. Si hay deficiencias, recomienda fertilizantes que las corrijan. Si hay excesos, sugiere ajustes.
-
-DEVUELVE ÚNICAMENTE JSON con:
-- name: Nombre ESPECÍFICO según necesidades (ej: "NPK 10-30-20 para deficit de P y K")
-- dose: Dosis EXACTA calculada para estos parámetros (ej: "150 kg/ha aplicados en 2 etapas")
-- link: Enlace real a producto en Guatemala (ej: "https://serviagro.com.gt/fertilizantes")
-- price: Precio actual aproximado en Quetzales
-- form: Formulación apropiada (granulado, líquido, etc.)
-- schedule: Cronograma ESPECÍFICO (fechas y métodos de aplicación) COMO STRING, no como array
-- effectiveness: % esperado según diagnóstico (ej: "95% efectivo para corregir deficit de fósforo")
-- benefits: 5 beneficios CONCRETOS para esta situación específica
-- disadvantages: 5 riesgos ESPECÍFICOS para estos parámetros
+Las dosis deben basarse en:
+- Requerimiento de N para frijol: 36 kg N por tonelada de rendimiento
+- Cálculos precisos por MANZANA (0.70 hectáreas)
+- Condiciones específicas de suelo volcánico guatemalteco
 
 SOLO JSON, sin texto adicional.`;
 
     const requestBody = {
-      model: "google/gemini-pro-1.5",
+      model: "openai/gpt-4.1-mini",
       messages: [
         {
           role: "system",
           content:
-            "Eres un agrónomo especializado en Guatemala. Proporcionas ÚNICAMENTE JSON válido. Las recomendaciones deben ser ESPECÍFICAS y PERSONALIZADAS según los valores exactos de los parámetros. Nunca repitas la misma recomendación para valores diferentes. Analiza cada parámetro individualmente y genera una respuesta única para cada conjunto de datos. Incluye detalles específicos sobre dosis, cronograma y efectividad basados en los valores proporcionados.",
+            "Eres un ingeniero agrónomo especializado en cultivos de frijol en Guatemala, con 25 años de experiencia. Proporcionas ÚNICAMENTE JSON válido sin comentarios adicionales. Tus recomendaciones son técnicas, prácticas y específicas para las condiciones guatemaltecas, usando siempre MANZANA como unidad de superficie.",
         },
         {
           role: "user",
           content: prompt,
         },
       ],
-      temperature: 0.7, // Aumentamos temperatura para más variedad
+      temperature: 0.7,
       max_tokens: 2500,
     };
 
@@ -153,8 +141,6 @@ SOLO JSON, sin texto adicional.`;
     } catch (parseError) {
       console.error("Error parseando JSON:", parseError);
       console.error("Contenido que falló al parsear:", content);
-
-      // Si falla el parseo, devolver una recomendación personalizada basada en parámetros
       return getPersonalizedFallback(parameters);
     }
   } catch (error) {
@@ -170,106 +156,187 @@ const getPersonalizedFallback = (parameters) => {
   // Lógica basada en los parámetros
   let recommendation;
 
+  // Escenario 1: Déficit crítico de Fósforo y Potasio
   if (parameters.phosphorus < 30 && parameters.potassium < 100) {
     recommendation = {
-      name: "Fertilizante NPK 10-30-20 para déficit de Fósforo y Potasio",
-      dose: "200 kg/ha aplicados en 2 etapas: 100 kg al sembrar, 100 kg a los 30 días",
-      link: "https://serviagro.com.gt/fertilizantes-fosfatados",
-      price: "Q480 por bolsa de 50 kg",
-      form: "Granulado de liberación controlada",
-      schedule:
-        "Aplicar al momento de siembra y a los 30 días después de la emergencia",
-      effectiveness:
-        "95% efectivo para corregir déficit de P y K en suelos volcánicos",
-      benefits: [
-        "Corrige el déficit crítico de fósforo (" +
-          parameters.phosphorus +
-          " ppm)",
-        "Suple la deficiencia de potasio (" + parameters.potassium + " ppm)",
-        "Mejora el desarrollo radicular en suelos volcánicos",
-        "Aumenta la resistencia a sequías moderadas",
-        "Optimiza la floración y fructificación del frijol",
+      diagnostico: `Déficit crítico de Fósforo (${parameters.phosphorus} ppm) y Potasio (${parameters.potassium} ppm) detectado en suelo volcánico. Niveles por debajo de los rangos óptimos (P: 30-60 ppm, K: 100-200 ppm) limitan severamente el desarrollo radicular y la resistencia a sequía.`,
+      nombre_recomendacion:
+        "Fertilizante Fosfo-Potásico para Suelos Volcánicos",
+      dosis_manzana: "90-110 lb/manzana de fórmula 10-30-20 aplicado al surco",
+      producto_sugerido: "NPK 10-30-20 granulado de liberación controlada",
+      precio_aproximado: "GTQ 650-800 por manzana (dependiendo de la zona)",
+      esquema_aplicacion:
+        "Aplicar 60 lb/manzana a la siembra y 40-50 lb/manzana en la floración. Incorporar ligeramente al suelo para reducir fijación en suelos volcánicos.",
+      eficacia_esperada:
+        "92% para corregir deficiencias de P y K en condiciones de manejo adecuado",
+      beneficios_tecnicos: [
+        "Corrige el déficit crítico de Fósforo en suelos volcánicos con alta capacidad de fijación",
+        "Suple la deficiencia de Potasio mejorando la resistencia hídrica del cultivo",
+        "Mejora el desarrollo radicular y la eficiencia en el uso de agua",
+        "Aumenta el amarre de vainas y el llenado uniforme del grano",
+        "Reduce el impacto del estrés por sequías intermitentes en el Corredor Seco",
       ],
-      disadvantages: [
-        "Costo elevado por alta concentración de fósforo",
-        "Requiere aplicación precisa para evitar quemaduras",
-        "Necesita humedad adecuada para su efectividad",
-        "Puede ser fijado por suelos ácidos si no se corrige pH",
-        "Almacenamiento inadecuado reduce efectividad",
+      precauciones: [
+        "La aplicación excesiva puede inmovilizar micronutrientes como el Zinc",
+        "No aplicar en contacto directo con la semilla por riesgo de fitotoxicidad",
+        "En suelos muy ácidos (pH < 5.5), la efectividad se reduce sin encalado previo",
+        "Requiere humedad adecuada para la disponibilidad nutrimental",
+        "El Fósforo es susceptible a fijación en suelos volcánicos si no se incorpora correctamente",
       ],
-    };
-  } else if (parameters.nitrogen < 60) {
-    recommendation = {
-      name: "Fertilizante Nitrogenado Urea 46-0-0",
-      dose:
-        "150 kg/ha para déficit de nitrógeno (" + parameters.nitrogen + " ppm)",
-      link: "https://serviagro.com.gt/fertilizantes-nitrogenados",
-      price: "Q320 por bolsa de 50 kg",
-      form: "Gránulos perlados",
-      schedule: "Aplicar en cobertura a los 15 y 30 días después de siembra",
-      effectiveness: "90% efectivo para corregir déficit de nitrógeno",
-      benefits: [
-        "Corrige déficit de nitrógeno (" + parameters.nitrogen + " ppm)",
-        "Estimula crecimiento vegetativo rápido",
-        "Aumenta biomasa y producción de hojas",
-        "Mejora coloración verde del cultivo",
-        "Fácil aplicación y absorción",
-      ],
-      disadvantages: [
-        "Volatilización en altas temperaturas",
-        "Puede acidificar el suelo con uso prolongado",
-        "Requiere aplicación fraccionada",
-        "Sensible a condiciones de humedad",
-        "Pérdidas por lixiviación en lluvias intensas",
+      recomendaciones_complementarias: [
+        "Realizar encalado si el pH es menor a 5.5 (usar 1-2 ton/manzana de dolomita)",
+        "Incorporar materia orgánica (5-10 ton/manzana de gallinaza) para mejorar la eficiencia del Fósforo",
+        "Considerar el sistema K'uxu'rum con madrecacao para aporte natural de Nitrógeno",
+        "Mantener cobertura vegetal para reducir estrés por temperatura y conservar humedad",
+        "Realizar análisis de suelo cada 2 ciclos para ajustar la fertilización",
       ],
     };
-  } else if (parameters.ph < 5.5) {
+  }
+  // Escenario 2: Déficit de Nitrógeno
+  else if (parameters.nitrogen < 60) {
     recommendation = {
-      name: "Encaje Agrícola Dolomítico + Fertilizante Balanceado",
-      dose: "2 ton/ha de encaje + 150 kg/ha de NPK 15-15-15",
-      link: "https://serviagro.com.gt/correctores-ph",
-      price: "Q180 por tonelada de encaje + Q450 por fertilizante",
-      form: "Polvo fino (encaje) + Granulado (fertilizante)",
-      schedule: "Encajar 15 días antes de siembra, fertilizar al sembrar",
-      effectiveness: "85% efectivo para corregir acidez del suelo",
-      benefits: [
-        "Corrige pH ácido (" + parameters.ph + ") del suelo",
-        "Aporta calcio y magnesio esenciales",
-        "Mejora disponibilidad de nutrientes",
-        "Reduce toxicidad por aluminio",
-        "Mejora estructura del suelo volcánico",
+      diagnostico: `Déficit de Nitrógeno (${parameters.nitrogen} ppm) detectado. Nivel por debajo del rango óptimo (60-120 ppm) para frijol, limitando el crecimiento vegetativo y la producción de biomasa.`,
+      nombre_recomendacion: "Fertilizante Nitrogenado de Liberación Controlada",
+      dosis_manzana: "80-100 lb/manzana de Urea 46-0-0 aplicado en cobertura",
+      producto_sugerido: "Urea 46-0-0 gránulos perlados",
+      precio_aproximado: "GTQ 350-450 por manzana",
+      esquema_aplicacion:
+        "Aplicar 40 lb/manzana a los 15 días después de siembra y 40-60 lb/manzana a los 30 días. Aplicar preferiblemente antes de lluvias ligeras.",
+      eficacia_esperada:
+        "88-92% para corregir déficit de Nitrógeno en condiciones de buena humedad",
+      beneficios_tecnicos: [
+        "Corrige rápidamente el déficit de Nitrógeno para crecimiento vegetativo",
+        "Estimula la producción de hojas y área foliar para mejor fotosíntesis",
+        "Mejora el color verde del cultivo en 10-15 días después de aplicación",
+        "Aumenta la biomasa total y capacidad productiva de la planta",
+        "Fácil aplicación y rápida disponibilidad para la planta",
       ],
-      disadvantages: [
-        "Requiere tiempo para reacción (15-30 días)",
-        "Aplicación laboriosa y costosa",
-        "Efecto dependiente de humedad del suelo",
-        "Puede afectar disponibilidad de algunos micronutrientes",
-        "Necesita análisis de suelo posterior",
+      precauciones: [
+        "Alta susceptibilidad a pérdidas por volatilización en temperaturas > 30°C",
+        "Puede acidificar el suelo con uso continuo sin encalado",
+        "Requiere aplicación fraccionada para maximizar eficiencia",
+        "Sensible a condiciones de humedad excesiva o deficiente",
+        "Pérdidas por lixiviación en lluvias intensas después de aplicación",
+      ],
+      recomendaciones_complementarias: [
+        "Incorporar abonos verdes como mucuna o canavalia para fijación biológica de N",
+        "Usar inhibidores de ureasa en aplicaciones con altas temperaturas",
+        "Implementar riego por goteo para mayor eficiencia en uso de nitrógeno",
+        "Monitorear niveles de Nitrógeno cada 3 semanas durante crecimiento",
+        "Combinar con fuentes orgánicas como gallinaza (2-3 ton/manzana)",
       ],
     };
-  } else {
-    // Recomendación balanceada por defecto
+  }
+  // Escenario 3: pH Ácido
+  else if (parameters.ph < 5.5) {
     recommendation = {
-      name: "Fertilizante NPK 15-15-15 Balanceado DISA",
-      dose: "180 kg/ha para mantenimiento de cultivo",
-      link: "https://serviagro.com.gt/fertilizantes-balanceados",
-      price: "Q450 por bolsa de 50 kg",
-      form: "Granulado",
-      schedule: "Aplicar 100 kg al sembrar y 80 kg a los 25 días",
-      effectiveness: "92% en suelos con parámetros estables",
-      benefits: [
-        "Mantenimiento de nutrientes en niveles óptimos",
-        "Balance ideal para cultivo de frijol",
-        "Adaptado a suelos volcánicos guatemaltecos",
-        "Mejora rendimiento y calidad de grano",
-        "Fácil aplicación y disponibilidad",
+      diagnostico: `pH ácido (${parameters.ph}) detectado. Fuera del rango óptimo para frijol (6.0-6.5), reduciendo la disponibilidad de Fósforo y aumentando toxicidad por Aluminio.`,
+      nombre_recomendacion: "Encalado Correctivo + Fertilizante Acidotolerante",
+      dosis_manzana:
+        "1.5-2 ton/manzana de cal dolomítica + 120 lb/manzana de NPK 12-24-12 acidotolerante",
+      producto_sugerido:
+        "Cal dolomítica (CaMg(CO3)2) + NPK 12-24-12 con azufre",
+      precio_aproximado:
+        "GTQ 1,200-1,500 por manzana (incluye encalado y fertilización)",
+      esquema_aplicacion:
+        "Aplicar cal 30 días antes de siembra, incorporar a 15-20 cm de profundidad. Fertilizar con NPK al momento de siembra y a los 25 días.",
+      eficacia_esperada:
+        "85% para corrección de acidez y 90% para disponibilidad de nutrientes",
+      beneficios_tecnicos: [
+        "Eleva el pH a niveles óptimos para disponibilidad nutrimental",
+        "Reduce la toxicidad por Aluminio y Manganeso en suelos ácidos",
+        "Aporta Calcio y Magnesio esenciales para desarrollo celular",
+        "Mejora la eficiencia de fertilizantes fosfatados",
+        "Aumenta la actividad microbiana beneficiosa del suelo",
       ],
-      disadvantages: [
-        "Puede no corregir deficiencias específicas",
-        "Costo moderado para pequeños productores",
-        "Requiere condiciones de humedad adecuadas",
-        "Almacenamiento inadecuado reduce efectividad",
-        "Aplicación excesiva puede causar desbalance",
+      precauciones: [
+        "Requiere 30-45 días para reacción completa con el suelo",
+        "Aplicación excesiva puede causar deficiencias de micronutrientes",
+        "No mezclar directamente con fertilizantes nitrogenados",
+        "Efectividad dependiente de humedad y temperatura del suelo",
+        "Necesita análisis de suelo posterior para verificar corrección",
+      ],
+      recomendaciones_complementarias: [
+        "Realizar análisis de suelo 60 días después del encalado",
+        "Usar variedades de frijol tolerantes a acidez como ICTA Ligero",
+        "Incorporar materia orgánica para buffer de pH (8-10 ton/manzana)",
+        "Evitar fertilizantes acidificantes como sulfato amónico",
+        "Monitorear niveles de Zinc y Boro después del encalado",
+      ],
+    };
+  }
+  // Escenario 4: Exceso de Nutrientes
+  else if (
+    parameters.nitrogen > 120 ||
+    parameters.phosphorus > 60 ||
+    parameters.potassium > 200
+  ) {
+    recommendation = {
+      diagnostico: `Exceso de nutrientes detectado: N ${parameters.nitrogen} ppm, P ${parameters.phosphorus} ppm, K ${parameters.potassium} ppm. Puede causar desbalances nutricionales y toxicidades.`,
+      nombre_recomendacion: "Fertilización de Mantenimiento Balanceada",
+      dosis_manzana: "60-80 lb/manzana de NPK 15-15-15 según análisis foliar",
+      producto_sugerido: "NPK 15-15-15 de liberación gradual",
+      precio_aproximado: "GTQ 400-550 por manzana",
+      esquema_aplicacion:
+        "Aplicar 40 lb/manzana a la siembra y 20-40 lb/manzana según monitoreo foliar a los 35 días. Reducir dosis si hay excesos evidentes.",
+      eficacia_esperada:
+        "94% para mantenimiento de cultivo sin agravar excesos",
+      beneficios_tecnicos: [
+        "Proporciona nutrición balanceada sin exacerbar excesos existentes",
+        "Mantiene niveles óptimos para desarrollo reproductivo",
+        "Reduce riesgo de toxicidades por desbalance nutricional",
+        "Mejora eficiencia en uso de nutrientes ya presentes en el suelo",
+        "Previene lixiviación de nitratos y contaminación de acuíferos",
+      ],
+      precauciones: [
+        "Realizar análisis foliar antes de segunda aplicación",
+        "Monitorear síntomas de toxicidad por excesos (quemaduras, clorosis)",
+        "Evitar aplicación en suelos con drenaje deficiente",
+        "Considerar reducción de riego si hay exceso de Nitrógeno",
+        "Ajustar dosis según precipitaciones esperadas",
+      ],
+      recomendaciones_complementarias: [
+        "Realizar análisis foliar cada 3 semanas durante ciclo",
+        "Implementar cultivos de cobertura para consumir excesos de nutrientes",
+        "Usar riego controlado para evitar lixiviación de nitratos",
+        "Considerar siembra de variedades eficientes en uso de nutrientes",
+        "Monitorear calidad de agua en zonas de recarga hídrica",
+      ],
+    };
+  }
+  // Escenario 5: Parámetros Óptimos - Mantenimiento
+  else {
+    recommendation = {
+      diagnostico: `Parámetros dentro de rangos óptimos: N ${parameters.nitrogen} ppm, P ${parameters.phosphorus} ppm, K ${parameters.potassium} ppm, pH ${parameters.ph}. Condiciones favorables para alta productividad.`,
+      nombre_recomendacion:
+        "Fertilización de Alta Precisión para Máximo Rendimiento",
+      dosis_manzana: "100-120 lb/manzana de NPK 17-17-17 con micronutrientes",
+      producto_sugerido: "NPK 17-17-17 + Zn, B, Mo complejado",
+      precio_aproximado: "GTQ 600-750 por manzana",
+      esquema_aplicacion:
+        "Aplicar 60 lb/manzana a la siembra, 30 lb/manzana en floración y 30 lb/manzana en formación de vainas. Aplicaciones precisas según estado fenológico.",
+      eficacia_esperada:
+        "96% para maximizar rendimiento en condiciones óptimas",
+      beneficios_tecnicos: [
+        "Maximiza el potencial genético del cultivo en condiciones favorables",
+        "Aporta micronutrientes críticos para llenado uniforme de grano",
+        "Mejora calidad comercial del grano (tamaño, color, peso)",
+        "Aumenta resistencia a estrés biótico y abiótico final de ciclo",
+        "Optimiza eficiencia en uso de agua y nutrientes disponibles",
+      ],
+      precauciones: [
+        "No exceder dosis para evitar desbalances nutricionales",
+        "Monitorear constantemente humedad del suelo para máxima eficiencia",
+        "Ajustar aplicaciones según condiciones climáticas reales",
+        "Verificar compatibilidad con productos de protección vegetal",
+        "Considerar análisis de tejido para ajustes finos",
+      ],
+      recomendaciones_complementarias: [
+        "Implementar riego por goteo para máxima eficiencia nutrimental",
+        "Usar tensiómetros para manejo preciso de humedad",
+        "Realizar aplicaciones foliares de micronutrientes en floración",
+        "Mantener registros detallados para replicar éxito en próximos ciclos",
+        "Considerar inoculación con rizobio para fijación biológica adicional",
       ],
     };
   }
@@ -277,30 +344,39 @@ const getPersonalizedFallback = (parameters) => {
   return recommendation;
 };
 
-// Función de respaldo genérica
+// Función de respaldo genérica actualizada para manzana
 export const getFallbackFertilizerRecommendation = () => {
   console.log("Usando función de respaldo genérica...");
   return {
-    name: "Fertilizante NPK 15-15-15 DISA MF LB",
-    dose: "20 kg por hectárea para maíz",
-    link: "https://serviagro.com.gt/productos/fertilizantes/",
-    price: "Q450 por bolsa de 50 kg",
-    form: "Granulado",
-    schedule: "Aplicar temprano en la mañana o al final de la tarde",
-    effectiveness: "92% en suelos con pH 6.0-7.0",
-    benefits: [
-      "Incrementa el rendimiento de maíz hasta un 25%",
-      "Mejora la resistencia a sequías moderadas",
-      "Favorece el desarrollo radicular en suelos volcánicos",
-      "Aumenta la eficiencia en el uso del agua",
-      "Proporciona nutrientes balanceados para cultivos básicos",
+    diagnostico:
+      "Recomendación general para cultivo de frijol en condiciones típicas guatemaltecas",
+    nombre_recomendacion: "Fertilizante Balanceado DISA para Frijol",
+    dosis_manzana: "80-100 lb/manzana de NPK 15-15-15",
+    producto_sugerido: "NPK 15-15-15 granulado de alta solubilidad",
+    precio_aproximado: "GTQ 450-600 por manzana",
+    esquema_aplicacion:
+      "Aplicar 50 lb/manzana al momento de siembra y 30-50 lb/manzana a los 25-30 días después de siembra. Incorporar ligeramente al suelo.",
+    eficacia_esperada: "90-95% en suelos con pH 6.0-7.0 y buena humedad",
+    beneficios_tecnicos: [
+      "Aporta nutrición balanceada para todas las etapas del cultivo",
+      "Mejora el desarrollo radicular en suelos volcánicos",
+      "Aumenta la resistencia a sequías moderadas del Corredor Seco",
+      "Optimiza el amarre de vainas y llenado de grano",
+      "Incrementa el rendimiento en 20-25% sobre testigo sin fertilizar",
     ],
-    disadvantages: [
-      "Sin fertilización, el rendimiento de frijol puede caer hasta un 35%",
-      "Mayor susceptibilidad a plagas comunes en la región",
-      "Disminución de la calidad nutricional de los cultivos",
-      "Reducción en la capacidad de retención de agua del suelo",
-      "Desequilibrio nutricional que afecta el desarrollo de frutos",
+    precauciones: [
+      "No aplicar en contacto directo con la semilla",
+      "Ajustar dosis según análisis de suelo específico",
+      "Requiere humedad adecuada para máxima eficiencia",
+      "Almacenar en lugar seco y fresco para mantener calidad",
+      "Usar equipo de protección durante la aplicación",
+    ],
+    recomendaciones_complementarias: [
+      "Realizar análisis de suelo cada 2 ciclos de cultivo",
+      "Implementar rotación maíz-frijol para sostenibilidad",
+      "Usar cobertura vegetal para conservar humedad",
+      "Considerar inoculación con rizobio para fijación de Nitrógeno",
+      "Mantener registros de rendimiento para ajustes futuros",
     ],
   };
 };

@@ -46,7 +46,7 @@ export default function SamplingPage() {
       setCargando(true);
       setError(null);
       const response = await fetch(
-        `http://localhost:8000/api/actividades/1/${
+        `https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/actividades/1/${
           mesSeleccionado + 1
         }/${anioSeleccionado}`
       );
@@ -70,18 +70,21 @@ export default function SamplingPage() {
     if (!fechaInput || !tituloInput) return alert("Completa fecha y título");
 
     try {
-      const response = await fetch("http://localhost:8000/api/actividades/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fecha: fechaInput,
-          titulo: tituloInput,
-          usuario_id: 1,
-          completada: false, // CORREGIDO: usar 'completada' en lugar de 'done'
-        }),
-      });
+      const response = await fetch(
+        "https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/actividades/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fecha: fechaInput,
+            titulo: tituloInput,
+            usuario_id: 1,
+            completada: false, // CORREGIDO: usar 'completada' en lugar de 'done'
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -107,7 +110,7 @@ export default function SamplingPage() {
     try {
       const actividadId = actividades[editando].id;
       const response = await fetch(
-        `http://localhost:8000/api/actividades/${actividadId}`,
+        `https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/actividades/${actividadId}`,
         {
           method: "PUT",
           headers: {
@@ -149,7 +152,7 @@ export default function SamplingPage() {
     try {
       const actividadId = actividades[idx].id;
       const response = await fetch(
-        `http://localhost:8000/api/actividades/${actividadId}`,
+        `https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/actividades/${actividadId}`,
         {
           method: "DELETE",
         }
@@ -186,7 +189,7 @@ export default function SamplingPage() {
       setActividades(actividadesActualizadas);
 
       const response = await fetch(
-        `http://localhost:8000/api/actividades/${actividadId}`,
+        `https://agromaguia-e6hratbmg2hraxdq.centralus-01.azurewebsites.net/api/actividades/${actividadId}`,
         {
           method: "PUT",
           headers: {
