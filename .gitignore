@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# 🔒 Archivos privados
+.env
+.env.local
+.env.*.local
